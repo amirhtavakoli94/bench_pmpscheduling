@@ -238,18 +238,23 @@ def mir_cuts(instance, Z, C, D, P0, P1, sn_b_all, oagap):
     cv_p1 = new_cvx_last_cleaning_grad_cuts.build_model(instance, Z, C, D, P0, P1, sn_b_all, oagap)
     cv_p1=cv_p1.relax()
     cv_p1.optimize()
-    for i in range(0,len(cv_p1.getVars())):
+    bt_h_p = {}
+    for var in cv_p1.getVars():
+        bt_h_p[var.VarName] = var.X
+    
+#@    for i in range(0,len(cv_p1.getVars())):
 #%#for i in range(0,0):
-            k_h_.append([cv_p1.VarName[i], cv_p1.X[i]])
+#@            k_h_.append([cv_p1.VarName[i], cv_p1.X[i]])
 
-            k_h_arr=np.array(k_h_)
-            keydicts= k_h_arr[:, 0]
-            bt_h_p= dict([
-                (key, [float(k_h_arr[i][1])]) for key, i in zip(keydicts, range(len(k_h_arr)))])
+#@            k_h_arr=np.array(k_h_)
+#@            keydicts= k_h_arr[:, 0]
+#@            bt_h_p= dict([
+#@                (key, [float(k_h_arr[i][1])]) for key, i in zip(keydicts, range(len(k_h_arr)))])
             
     for t in instance.horizon():
         for j, tank in instance.tanks.items():
-            tank.activate_h_star(bt_h_p[f'ht({j},{t})'][0], t)
+#@            tank.activate_h_star(bt_h_p[f'ht({j},{t})'][0], t)
+            tank.activate_h_star(bt_h_p[f'ht({j},{t})'], t)
             
     
     
@@ -296,25 +301,33 @@ def mir_cuts(instance, Z, C, D, P0, P1, sn_b_all, oagap):
             sts_tf_=s_t.getObjective()
             sts_tf= sts_tf_.getValue()
             h_srzt=[]
+            
+            
         
-        
-            k_h_prob_1=[]
-            for i in range(0,len(s_t.getVars())):
-                k_h_prob_1.append([s_t.VarName[i], s_t.RC[i]])
+            bt_op_prob_1 = {}
+            for var in s_t.getVars():
+                bt_op_prob_1[var.VarName] = var.RC
+#@            k_h_prob_1=[]
+#@            for i in range(0,len(s_t.getVars())):
+#@                k_h_prob_1.append([s_t.VarName[i], s_t.RC[i]])
 
-                k_h_prob_1_arr=np.array(k_h_prob_1)
-                keydicts= k_h_prob_1_arr[:, 0]
-                bt_op_prob_1= dict([
-                (key, [float(k_h_prob_1_arr[i][1])]) for key, i in zip(keydicts, range(len(k_h_prob_1_arr)))])
+#@                k_h_prob_1_arr=np.array(k_h_prob_1)
+#@                keydicts= k_h_prob_1_arr[:, 0]
+#@                bt_op_prob_1= dict([
+#@                (key, [float(k_h_prob_1_arr[i][1])]) for key, i in zip(keydicts, range(len(k_h_prob_1_arr)))])
 ####            for j, tank in instance.tanks.items():
                 
-            bt_pi_h_prob_1= dict([( (K, tuple(pumps_considered), ts, tf), [ bt_op_prob_1[f'ht({K},{ts})'][0], bt_op_prob_1[f'ht({K},{tf})'][0]  ]) ])
+#@            bt_pi_h_prob_1= dict([( (K, tuple(pumps_considered), ts, tf), [ bt_op_prob_1[f'ht({K},{ts})'][0], bt_op_prob_1[f'ht({K},{tf})'][0]  ]) ])
+            bt_pi_h_prob_1= dict([( (K, tuple(pumps_considered), ts, tf), [ bt_op_prob_1[f'ht({K},{ts})'], bt_op_prob_1[f'ht({K},{tf})']  ]) ])
             instance._tank_mir_cuts[(K, tuple(pumps_considered), ts, tf)].update_x(sts_tf)
             
             instance._tank_mir_cuts[(K, tuple(pumps_considered), ts, tf)].update_x(sts_tf)
-            instance._tank_mir_cuts[(K, tuple(pumps_considered), ts, tf)].update_mu_s(bt_op_prob_1[f'ht({K},{ts})'][0])
-            instance._tank_mir_cuts[(K, tuple(pumps_considered), ts, tf)].update_mu_f(bt_op_prob_1[f'ht({K},{tf})'][0])
+#@            instance._tank_mir_cuts[(K, tuple(pumps_considered), ts, tf)].update_mu_s(bt_op_prob_1[f'ht({K},{ts})'][0])
+#@            instance._tank_mir_cuts[(K, tuple(pumps_considered), ts, tf)].update_mu_f(bt_op_prob_1[f'ht({K},{tf})'][0])
+ 
             
+            instance._tank_mir_cuts[(K, tuple(pumps_considered), ts, tf)].update_mu_s(bt_op_prob_1[f'ht({K},{ts})'])
+            instance._tank_mir_cuts[(K, tuple(pumps_considered), ts, tf)].update_mu_f(bt_op_prob_1[f'ht({K},{tf})'])
             
             bt_pih_prob= {**bt_pih_prob,**bt_pi_h_prob_1}
             pi_n_ts_tf_Q_1={**pi_n_ts_tf_Q_1, **bt_pi_h_prob_1}

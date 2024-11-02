@@ -71,13 +71,13 @@ def build_model(inst: Instance, Z, C, D, P0, P1, bt_h_p, ts, tf, oagap: float, a
             ubt = tank.head(tank.vinit) if t == 0 else D[j, t][1]
             if t == ts:
                 
-                    lbt= bt_h_p[f'ht({j},{ts})'][0]
-                    ubt= bt_h_p[f'ht({j},{ts})'][0]
+                    lbt= bt_h_p[f'ht({j},{ts})']
+                    ubt= bt_h_p[f'ht({j},{ts})']
 
             elif t == tf:
                 
-                    lbt= bt_h_p[f'ht({j},{tf})'][0]
-                    ubt= bt_h_p[f'ht({j},{tf})'][0]
+                    lbt= bt_h_p[f'ht({j},{tf})']
+                    ubt= bt_h_p[f'ht({j},{tf})']
 
                 
             hvar[j, t] = milp.addVar(lb=lbt, ub=ubt, name=f'ht({j},{t})')

@@ -152,10 +152,10 @@ def build_model(inst: Instance, Z, C, D, P0, P1, sn_b_all, oagap: float, arcvals
                 
                 
     ###### CONDITIONAL BOUNDS BASED ON ACTIVITIES OF CONTROL ARCS - FIRST PARTITION OF VAN ZYL NETWORK #####
-#@    probing_confs(inst, milp, svar, lifted_svar, qvar, hvar, dhvar, qexpr, horizon, oagap)
+    probing_confs(inst, milp, svar, lifted_svar, qvar, hvar, dhvar, qexpr, horizon, oagap)
     ##### then discretization, adding constraints related to the difference of the two tanks levels
     
-#@    discretization_vars_consts(inst, milp, svar, qvar, hvar, dhvar, dh, inst._number_disc, horizon, oagap)
+    discretization_vars_consts(inst, milp, svar, qvar, hvar, dhvar, dh, inst._number_disc, horizon, oagap)
                         
     
 
@@ -278,9 +278,9 @@ def build_model(inst: Instance, Z, C, D, P0, P1, sn_b_all, oagap: float, arcvals
                     
     if inst._tank_mir_cuts is None:
         pass
-#    else:
-#        if len(inst._tank_mir_cuts.items())>=1:
-#            mir_cuts_implementation_n(milp, inst, D, s3_var, hvar)
+    else:
+        if len(inst._tank_mir_cuts.items())>=1:
+            mir_cuts_implementation_n(milp, inst, D, s3_var, hvar)
                     
                     
 

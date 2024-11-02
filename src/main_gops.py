@@ -21,6 +21,9 @@ import BT_Cleaning_C2
 import time
 import new_cvx_last_cleaning_grad_cuts
 import pickle
+import datetime as dt
+
+
 
 OA_GAP = 1e-2
 MIP_GAP = 1e-6
@@ -29,8 +32,8 @@ BENCH = {
     'FSD': {'ntk': 'Simple_Network', 'D0': 1, 'H0': '/01/2013 00:00'},
     'RIC': {'ntk': 'Richmond', 'D0': 21, 'H0': '/05/2013 07:00'},
     'ANY': {'ntk': 'Anytown', 'D0': 1, 'H0': '/01/2013 00:00'},
-#    'VAN': {'ntk': 'Vanzyl', 'D0': 1, 'H0': '/01/2013 08:00'},
-    'VAN': {'ntk': 'Vanzyl', 'D0': 21, 'H0': '/05/2013 07:00'}
+    'VAN': {'ntk': 'Vanzyl', 'D0': 1, 'H0': '/01/2011 08:00'},
+#    'VAN': {'ntk': 'Vanzyl', 'D0': 21, 'H0': '/05/2013 07:00'}
 }
 PROFILE = {'s': 'Profile_5d_30m_smooth', 'n': 'demand_tank0_2011_lazy_bum_van_gaus'}
 STEPLENGTH = {'12': 4, '24': 2, '48': 1}
@@ -45,9 +48,18 @@ def makeinstance(instid: str):
     dend = f"{(d['D0'] + int(a[3])):02d}" + d['H0']
     return Instance(d['ntk'], PROFILE[a[1]], dbeg, dend, STEPLENGTH[a[2]])
 
+def makeinstance_mein_loop(instid: str, ite):
+    a = instid.split()
+    assert len(a) == 4, f"wrong instance key {instid}"
+    d = BENCH[a[0]]
+    dbeg= dt.datetime.strftime(dt.datetime.strptime('01/01/2011 08:00','%d/%m/%Y %H:%M')+(ite)*dt.timedelta(hours=24),'%d/%m/%Y %H:%M')
+    dend= dt.datetime.strftime(dt.datetime.strptime('01/01/2011 08:00','%d/%m/%Y %H:%M')+(ite+1)*dt.timedelta(hours=24),'%d/%m/%Y %H:%M')
+#    dbeg = f"{(d['D0'] + int(a[3]) - 1):02d}" + d['H0']
+#    dend = f"{(d['D0'] + int(a[3])):02d}" + d['H0']
+    return Instance(d['ntk'], PROFILE[a[1]], dbeg, dend, STEPLENGTH[a[2]])
 
 FASTBENCH = [
-    'VAN s 12 1',
+    'VAN n 24 2',
 ##    'VAN s 12 2',
 ##    'VAN s 12 3',
 ##    'VAN s 12 4',
@@ -226,7 +238,7 @@ def solve_BT(instance, Z, C, D, P0, P1, S_n_all, number_disc, oagap, mipgap, dra
     print("create model")
     cvxmodel = new_cvx_last_cleaning_grad_cuts.build_model(instance, Z, C, D, P0, P1, S_n_all, oagap, arcvals=arcvals)
     cvxmodel.params.MIPGap = mipgap
-    cvxmodel.params.timeLimit = 6200
+    cvxmodel.params.timeLimit = 3600
     cvxmodel.params.Threads = 10
     print("solve model")
     br_ch_ini= time.time()
@@ -266,8 +278,9 @@ def solvebench_BT(bench, oagap=OA_GAP, mipgap=MIP_GAP, modes=None, drawsolution=
 
 
 
-def solveinstance_just_bound_check(instid, oagap=OA_GAP, mipgap=MIP_GAP, modes=None, drawsolution=True, stat=None, file=defaultfilename):
-    instance = makeinstance(instid)
+def solveinstance_just_bound_check(instid, ii, oagap=OA_GAP, mipgap=MIP_GAP, modes=None, drawsolution=True, stat=None, file=defaultfilename):
+#    instance = makeinstance(instid)
+    instance = makeinstance_mein_loop(instid_n, ii)
     stat = Stat(parsemode(modes)) if stat is None else stat
     now = datetime.now().strftime("%y%m%d-%H%M")
     print(now)
@@ -286,7 +299,10 @@ def solveinstance_just_bound_check(instid, oagap=OA_GAP, mipgap=MIP_GAP, modes=N
     
     ###N_Cardi = BT_Cleaning_C2.cardinality_vi(instance, Z, C, D, P0, P1, number_disc, oagap)
     
-    with open('..//bounds//VAN s 12.pkl', 'rb') as file:
+#    with open('..//bounds//VAN s 12.pkl', 'rb') as file:
+#        loaded_data = pickle.load(file)
+
+    with open(f'..//bounds//50_instances//my_objects_van25_1_5discrete_50_instances_{ii-1}.pkl', 'rb') as file:
         loaded_data = pickle.load(file)
     
     
@@ -320,14 +336,14 @@ def solveinstance_just_bound_check(instid, oagap=OA_GAP, mipgap=MIP_GAP, modes=N
     return Z, C, D, P0, P1, N_Cardi, dic_ca, s1p, piq, number_disc, instance
 
             
-instid='VAN s 12 1'
+instid='VAN n 24 2'
 instance=makeinstance(instid)   
 
  
             
 #@@@Z, C, D, P0, P1, Z_tau, C_tau, D_tau, dh_star, S_n_all_, tim_req= solveinstance_just_bound(instid, oagap=OA_GAP, mipgap=MIP_GAP, modes=None, drawsolution=False) 
 
-Z, C, D, P0, P1, nnm, bt_h, sip, piq, number_disc, instance = solveinstance_just_bound_check(instid, oagap=OA_GAP, mipgap=MIP_GAP, modes=None, drawsolution=False) 
+###@@@@Z, C, D, P0, P1, nnm, bt_h, sip, piq, number_disc, instance = solveinstance_just_bound_check(instid, oagap=OA_GAP, mipgap=MIP_GAP, modes=None, drawsolution=False) 
 
 
 
@@ -397,7 +413,7 @@ def solve_BT_MIR(instance, Z, C, D, P0, P1, S_n_all, number_disc, oagap, mipgap,
 
 
 FASTBENCH = [
-    'VAN s 12 1',
+    'VAN n 24 2',
 ##    'VAN s 12 2',
 ##    'VAN s 12 3',
 ##    'VAN s 12 4',
@@ -415,11 +431,13 @@ stat = Stat(parsemode(None))
 ####solve_milp(instance, Z, C, D, P0, P1, nnm, number_disc, 0.01, 10e-6, False, stat)
 dic_macht={}
 dict_fe={}
-for ii in range(1, 5):
+number_disc = 5
+for ii in range(49, 50):
 
-    instid_n = f'VAN s 12 {ii}'
-    instance_n = makeinstance(instid_n)
-    instance.update_tariff(instance_n.tariff)
+    instid_n = f'VAN n 24 {ii}'
+#@    instance_n = makeinstance(instid_n)
+#@    instance.update_tariff(instance_n.tariff)
+    Z, C, D, P0, P1, nnm, bt_h, sip, piq, number_disc, instance = solveinstance_just_bound_check(instid_n,ii, oagap=OA_GAP, mipgap=MIP_GAP, modes=None, drawsolution=False) 
     cost, plan, volu, lower_bound, solu, time_br_check, numb_nodes = solve_BT(instance, Z, C, D, P0, P1, nnm, number_disc, 0.01, 10e-6, False, stat)
 #    for itera in range(317, 364):
 
@@ -436,16 +454,16 @@ for ii in range(1, 5):
 
     
 
-    with open(f'check_s_correc2011_12_van_dep_new_noprob_noCard_nohMIR_nodisc_agg{ii}.pickle', 'wb') as f:
+#    with open(f'check_s_correc2011_24_van_dep_new_prob_noCard_MIR_disc_agg{ii}_seemsfine.pickle', 'wb') as f:
                     # write JSON data to file
-                    pickle.dump(dict_fe[ii], f)
+#                    pickle.dump(dict_fe[ii], f)
                     
                     
             
                 
-    with open(f'check_s_correc_macht2011_24_van_dep_new_noprob_noCard_noMIR_nodisc_agg{ii}.pickle', 'wb') as f:
+#    with open(f'check_s_correc_macht2011_24_van_dep_new_prob_noCard_MIR_disc_agg{ii}_seemsfine.pickle', 'wb') as f:
                     # write JSON data to file
-                    pickle.dump(dic_macht[ii], f)
+#                    pickle.dump(dic_macht[ii], f)
 
     
 
